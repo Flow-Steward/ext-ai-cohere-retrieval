@@ -142,3 +142,21 @@ class HostTests(unittest.TestCase):
             payload["runtime_context"] = {}
             self.assertFalse(main.handle(payload)["ok"])
             self.assertEqual(upstream.call_count, 1)
+
+
+class DimensionTests(unittest.TestCase):
+    def test_dimension_select_is_converted_to_integer(self):
+        with patch(
+            "runtime.call", return_value={"embeddings": {"float": [[0.0] * 256]}}
+        ) as upstream:
+            result = runtime.execute(
+                "embed",
+                {
+                    "texts": ["a"],
+                    "input_type": "search_document",
+                    "output_dimension": "256",
+                },
+                "key",
+            )
+        assert result["dimensions"] == 256
+        assert upstream.call_args.args[1]["output_dimension"] == 256

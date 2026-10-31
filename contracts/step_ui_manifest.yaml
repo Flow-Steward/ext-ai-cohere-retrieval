@@ -32,4 +32,14 @@ forms:
     - {label: Embed v4 (default), value: embed-v4.0}
     - {label: Embed v5 Pro, value: embed-v5.0-pro}
     - {label: Embed v5 Fast, value: embed-v5.0-fast}
-  - {name: output_dimension, widget_type: number, label: 'Output dimensions (optional; varies by model)'}
+  - name: output_dimension
+    widget_type: select
+    label: Output dimensions
+    help_text: 'Optional. v4 supports 256, 512, 1024 and 1536; v5 also supports 768 and 2048.'
+    options:
+    - {label: '256', value: '256'}
+    - {label: '512', value: '512'}
+    - {label: '768 (v5 only)', value: '768'}
+    - {label: '1024', value: '1024'}
+    - {label: '1536', value: '1536'}
+    - {label: '2048 (v5 only)', value: '2048'}

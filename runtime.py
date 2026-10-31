@@ -162,6 +162,8 @@ def execute(operation, args, key):
             "embedding_types": ["float"],
         }
         dim = args.get("output_dimension")
+        if isinstance(dim, str) and dim.isascii() and dim.isdecimal():
+            dim = int(dim)
         if dim is not None:
             if (
                 isinstance(dim, bool)

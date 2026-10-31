@@ -28,7 +28,7 @@ operations:
   - {name: texts, value_type: array, required: true, display_name: Texts}
   - {name: input_type, value_type: text, required: true, display_name: Input type}
   - {name: model, value_type: text, required: false, display_name: Model}
-  - {name: output_dimension, value_type: number, required: false, display_name: Output dimensions}
+  - {name: output_dimension, value_type: text, required: false, display_name: Output dimensions}
   outputs:
   - {name: vectors, value_type: array}
   - {name: dimensions, value_type: number}
