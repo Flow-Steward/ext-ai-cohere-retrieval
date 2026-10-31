@@ -11,7 +11,7 @@ forms:
     - {label: Rerank v3.5 (default), value: rerank-v3.5}
     - {label: Rerank v5 Pro, value: rerank-v5.0-pro}
     - {label: Rerank v5 Fast, value: rerank-v5.0-fast}
-  - {name: top_n, widget_type: number, label: Maximum results (1 to document count)}
+  - {name: top_n, widget_type: integer, label: Maximum results (1 to document count)}
 - operation_id: embed
   title: Embed texts
   fields:
