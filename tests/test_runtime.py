@@ -259,3 +259,24 @@ class OutputBoundaryTests(unittest.TestCase):
             result = main.handle(payload)
         self.assertTrue(result["ok"])
         self.assertLess(len(json.dumps(result).encode()), 5 * 1024 * 1024)
+
+
+class CommonDimensionTests(unittest.TestCase):
+    def test_explicit_v5_only_dimensions_are_not_accepted(self):
+        for dim in (768, 2048):
+            with (
+                self.subTest(dim=dim),
+                patch("runtime.call") as call,
+                self.assertRaises(runtime.Failure),
+            ):
+                runtime.execute(
+                    "embed",
+                    {
+                        "texts": ["x"],
+                        "input_type": "search_query",
+                        "model": "embed-v5.0-pro",
+                        "output_dimension": str(dim),
+                    },
+                    "key",
+                )
+            call.assert_not_called()

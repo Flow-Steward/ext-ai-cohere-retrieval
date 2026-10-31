@@ -11,8 +11,8 @@ EMBED_MODELS = {"embed-v4.0", "embed-v5.0-pro", "embed-v5.0-fast"}
 INPUT_TYPES = {"search_document", "search_query", "classification", "clustering"}
 DIMENSIONS = {
     "embed-v4.0": {256, 512, 1024, 1536},
-    "embed-v5.0-pro": {256, 512, 768, 1024, 1536, 2048},
-    "embed-v5.0-fast": {256, 512, 768, 1024, 1536, 2048},
+    "embed-v5.0-pro": {256, 512, 1024, 1536},
+    "embed-v5.0-fast": {256, 512, 1024, 1536},
 }
 
 
@@ -189,7 +189,7 @@ def execute(operation, args, key):
             ):
                 invalid(
                     "output_dimension",
-                    "choose a supported dimension for the selected model.",
+                    "choose 256, 512, 1024 or 1536, or omit for the model default.",
                 )
             data["output_dimension"] = dim
         expected_dim = (
