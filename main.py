@@ -17,6 +17,7 @@ def handle(payload):
             action.get("action_id"),
             action.get("input") or {},
             secrets.get("api_key", ""),
+            connection.get("config") or {},
         )
         return {"ok": True, "result": result, "errors": []}
     except runtime.Failure as exc:

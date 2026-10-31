@@ -26,7 +26,7 @@ def invalid(field, hint):
     raise Failure("invalid_payload", f"{field}: {hint}")
 
 
-def call(endpoint, data, key):
+def call(endpoint, data, key, *, timeout_seconds=60):
     from flowsteward_extension_sdk import open_pinned_url
 
     encoded = json.dumps(data).encode()
@@ -44,7 +44,7 @@ def call(endpoint, data, key):
     )
     try:
         with open_pinned_url(
-            request, timeout_seconds=60, purpose="Cohere retrieval"
+            request, timeout_seconds=timeout_seconds, purpose="Cohere retrieval"
         ) as response:
             raw = response.read(16 * 1024 * 1024 + 1)
             if len(raw) > 16 * 1024 * 1024:
@@ -89,7 +89,18 @@ def request_id(response):
     return value
 
 
-def execute(operation, args, key):
+def execute(operation, args, key, config=None):
+    config = config or {}
+    timeout = config.get("request_timeout_seconds", 60)
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, int)
+        or not 1 <= timeout <= 60
+    ):
+        invalid(
+            "request_timeout_seconds",
+            "set the connection timeout to an integer from 1 to 60 seconds.",
+        )
     if not key:
         raise Failure(
             "not_configured",
@@ -130,7 +141,7 @@ def execute(operation, args, key):
             ):
                 invalid("top_n", "enter an integer between 1 and the document count.")
             data["top_n"] = top
-        response = call("rerank", data, key)
+        response = call("rerank", data, key, timeout_seconds=timeout)
         rows = response.get("results") if isinstance(response, dict) else None
         if not isinstance(rows, list) or len(rows) != (top or len(docs)):
             raise Failure(
@@ -200,7 +211,7 @@ def execute(operation, args, key):
                 "texts",
                 "batch is too large for the selected dimensions; split it into smaller batches.",
             )
-        response = call("embed", data, key)
+        response = call("embed", data, key, timeout_seconds=timeout)
         vectors = (
             response.get("embeddings", {}).get("float")
             if isinstance(response, dict)

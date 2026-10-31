@@ -3,3 +3,4 @@ title: Connection
 description: How to connect Cohere.
 components:
 - ref: ../components/connection.yaml
+- ref: ../components/connection_form.yaml

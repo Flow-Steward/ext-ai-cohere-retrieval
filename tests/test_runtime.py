@@ -134,7 +134,12 @@ class HostTests(unittest.TestCase):
             "action": {
                 "action_id": "embed",
                 "input": {"texts": ["a"], "input_type": "search_query"},
-                "target": {"connection": {"secrets": {"api_key": "selected"}}},
+                "target": {
+                    "connection": {
+                        "secrets": {"api_key": "selected"},
+                        "config": {"request_timeout_seconds": 10},
+                    }
+                },
             },
         }
         with patch(
@@ -143,6 +148,7 @@ class HostTests(unittest.TestCase):
         ) as upstream:
             self.assertTrue(main.handle(payload)["ok"])
             self.assertEqual(upstream.call_args.args[2], "selected")
+            self.assertEqual(upstream.call_args.kwargs["timeout_seconds"], 10)
             payload["runtime_context"] = {}
             self.assertFalse(main.handle(payload)["ok"])
             self.assertEqual(upstream.call_count, 1)
@@ -280,3 +286,27 @@ class CommonDimensionTests(unittest.TestCase):
                     "key",
                 )
             call.assert_not_called()
+
+
+class ConnectionTimeoutTests(unittest.TestCase):
+    def test_invalid_timeout_is_rejected_before_network(self):
+        with patch("runtime.call") as call, self.assertRaises(runtime.Failure):
+            runtime.execute(
+                "embed",
+                {"texts": ["x"], "input_type": "search_query"},
+                "key",
+                {"request_timeout_seconds": 61},
+            )
+        call.assert_not_called()
+
+    def test_selected_timeout_is_passed_to_request(self):
+        with patch(
+            "runtime.call", return_value={"embeddings": {"float": [[0.0] * 1536]}}
+        ) as call:
+            runtime.execute(
+                "embed",
+                {"texts": ["x"], "input_type": "search_query"},
+                "key",
+                {"request_timeout_seconds": 10},
+            )
+        self.assertEqual(call.call_args.kwargs["timeout_seconds"], 10)

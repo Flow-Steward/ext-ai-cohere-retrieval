@@ -1,0 +1,15 @@
+component_id: cohere_connection_form
+type: connection_form
+title: Cohere API connection
+description: Create a Cohere API key in the Cohere dashboard and save it securely for this project. Requests send your text to Cohere and may incur charges.
+data:
+  connection_kind: extension
+  connection_type: cohere_api
+  config_fields: [request_timeout_seconds]
+  secret_fields: [api_key]
+defaults: {display_name: Cohere API, request_timeout_seconds: 60}
+fields:
+- {path: display_name, label: Connection name, widget: text}
+- {path: environment, label: Environment, widget: text}
+- {path: request_timeout_seconds, label: Request timeout seconds, widget: integer, help: Choose an integer from 1 to 60 seconds.}
+- {path: api_key, label: 'Cohere API key *', widget: secret, required: true, help: Create a key in the Cohere dashboard. Flow Steward encrypts it in this project connection.}

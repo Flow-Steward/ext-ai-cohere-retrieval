@@ -2,7 +2,11 @@ connection_types:
 - connection_type_id: cohere_api
   display_name: Cohere API
   description: Project-scoped Cohere API key for retrieval operations.
-  config_schema: {type: object, additionalProperties: false, properties: {}}
+  config_schema:
+    type: object
+    additionalProperties: false
+    properties:
+      request_timeout_seconds: {type: integer, minimum: 1, maximum: 60, default: 60, title: Request timeout seconds}
   secret_schema:
     type: object
     additionalProperties: false
