@@ -1,7 +1,7 @@
 schema_version: extension_descriptor_v1
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.cohere-retrieval
-release_version: 1.0.1
+release_version: 1.0.2
 extension_type: service_extension
 identity:
   display_name: Cohere Retrieval
