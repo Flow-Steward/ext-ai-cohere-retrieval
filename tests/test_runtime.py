@@ -498,3 +498,31 @@ class ResponseHeaderTests(unittest.TestCase):
         ):
             runtime.call("embed", {}, "key")
         self.assertEqual(exc.exception.request_id, "header-id")
+
+
+class ResponseHeaderSuccessTests(unittest.TestCase):
+    def test_response_header_id_used_when_body_omits_id(self):
+        import sys
+        import types
+
+        class Response:
+            headers = {"x-request-id": "header-success"}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, size):
+                return b'{"results": []}'
+
+        with patch.dict(
+            sys.modules,
+            {
+                "flowsteward_extension_sdk": types.SimpleNamespace(
+                    open_pinned_url=lambda *a, **kw: Response()
+                )
+            },
+        ):
+            self.assertEqual(runtime.call("rerank", {}, "key")["id"], "header-success")

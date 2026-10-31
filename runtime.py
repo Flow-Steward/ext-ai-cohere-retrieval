@@ -60,7 +60,10 @@ def call(endpoint, data, key, *, timeout_seconds=60):
                     correlation,
                 )
             try:
-                return json.loads(raw)
+                body = json.loads(raw)
+                if isinstance(body, dict) and not body.get("id") and correlation:
+                    body["id"] = correlation
+                return body
             except (ValueError, UnicodeError):
                 raise Failure(
                     "provider_unavailable", "Cohere returned invalid JSON.", correlation
