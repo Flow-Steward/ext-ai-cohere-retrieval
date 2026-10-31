@@ -17,9 +17,10 @@ DIMENSIONS = {
 
 
 class Failure(Exception):
-    def __init__(self, code, message):
+    def __init__(self, code, message, request_id=""):
         super().__init__(message)
         self.code = code
+        self.request_id = request_id
 
 
 def invalid(field, hint):
@@ -60,9 +61,13 @@ def call(endpoint, data, key, *, timeout_seconds=60):
             if exc.code == 429
             else "provider_unavailable"
         )
+        upstream_id = str(exc.headers.get("x-request-id", "")) if exc.headers else ""
+        if len(upstream_id) > 256:
+            upstream_id = ""
         raise Failure(
             code,
             f"Cohere request failed with HTTP {exc.code}; review credentials, limits, and input.",
+            upstream_id,
         ) from None
     except (TimeoutError, socket.timeout):
         raise Failure(
@@ -131,6 +136,10 @@ def execute(operation, args, key, config=None):
             texts.append(doc["text"])
         if len(set(ids)) != len(ids):
             invalid("documents", "each id must be unique.")
+        if sum(len(json.dumps(doc_id).encode()) + 100 for doc_id in ids) > 256 * 1024:
+            invalid(
+                "documents", "IDs exceed the replay output budget; split the batch."
+            )
         data = {"model": model, "query": query, "documents": texts}
         top = args.get("top_n")
         if top is not None:
@@ -206,7 +215,7 @@ def execute(operation, args, key, config=None):
         expected_dim = (
             dim if dim is not None else (1536 if model == "embed-v4.0" else 2048)
         )
-        if len(texts) * expected_dim * 32 > 3 * 1024 * 1024:
+        if len(texts) * expected_dim * 32 > 256 * 1024:
             invalid(
                 "texts",
                 "batch is too large for the selected dimensions; split it into smaller batches.",
@@ -244,7 +253,7 @@ def execute(operation, args, key, config=None):
                 "provider_unavailable",
                 "Cohere returned invalid embedding dimensions or values.",
             )
-        if len(json.dumps(vectors)) > 4 * 1024 * 1024:
+        if len(json.dumps(vectors)) > 384 * 1024:
             raise Failure(
                 "provider_unavailable",
                 "Cohere returned embeddings too large for the workflow output.",

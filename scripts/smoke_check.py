@@ -12,6 +12,7 @@ scope = {
     "for_each_id": None,
     "step_id": "smoke",
     "step_execution_id": "test",
+    "external_effect_id": "claim-1",
 }
 
 
@@ -22,8 +23,14 @@ def request(operation, values):
         "runtime_context": scope,
         "action": {
             "action_id": operation,
-            "input": values,
-            "target": {"connection": {"secrets": {"api_key": "mock"}}},
+            "input": {"connection_ref": "cohere-smoke", **values},
+            "target": {
+                "connection": {
+                    "connection_id": "cohere-smoke",
+                    "connection_type": "cohere_api",
+                    "secrets": {"api_key": "mock"},
+                }
+            },
         },
     }
 

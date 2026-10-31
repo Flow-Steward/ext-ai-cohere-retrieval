@@ -13,6 +13,9 @@ required_scopes: ['extension:invoke']
 egress: {hosts: [api.cohere.com]}
 machine_auth: {service_account_key: svc_ext_cohere_retrieval, required_scopes: ['extension:invoke']}
 account_scope: {scope_type: project, description: Cohere credentials are project connection scoped.}
+external_effects:
+- {operation_id: rerank, effect_kind: paid_api_call, channel: cohere, idempotency: required, test_mode_behavior: suppress}
+- {operation_id: embed, effect_kind: paid_api_call, channel: cohere, idempotency: required, test_mode_behavior: suppress}
 entrypoint: {mode: subprocess, command: [python3, main.py], timeout_seconds: 75}
 health: {command: [python3, health.py], timeout_seconds: 5}
 ui_manifest: ui/ui_manifest.yaml

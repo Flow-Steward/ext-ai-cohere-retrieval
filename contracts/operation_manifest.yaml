@@ -7,6 +7,7 @@ operations:
   connection_type_ids: [cohere_api]
   category: retrieval
   inputs:
+  - {name: connection_ref, value_type: connection_ref, required: true, display_name: Cohere connection}
   - {name: query, value_type: text, required: true, display_name: Query}
   - {name: documents, value_type: array, required: true, display_name: Documents}
   - {name: model, value_type: text, required: false, display_name: Model}
@@ -16,7 +17,7 @@ operations:
   - {name: model, value_type: text}
   - {name: request_id, value_type: text}
   result_fields: [result.results, result.model, result.request_id]
-  error_codes: [invalid_payload, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
+  error_codes: [invalid_payload, invalid_connection, effect_claim_required, test_mode_suppressed, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
 - operation_id: embed
   display_name: Embed texts
   description: Generate one floating-point vector per text in input order.
@@ -25,6 +26,7 @@ operations:
   connection_type_ids: [cohere_api]
   category: retrieval
   inputs:
+  - {name: connection_ref, value_type: connection_ref, required: true, display_name: Cohere connection}
   - {name: texts, value_type: array, required: true, display_name: Texts}
   - {name: input_type, value_type: text, required: true, display_name: Input type}
   - {name: model, value_type: text, required: false, display_name: Model}
@@ -35,4 +37,4 @@ operations:
   - {name: model, value_type: text}
   - {name: request_id, value_type: text}
   result_fields: [result.vectors, result.dimensions, result.model, result.request_id]
-  error_codes: [invalid_payload, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
+  error_codes: [invalid_payload, invalid_connection, effect_claim_required, test_mode_suppressed, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
