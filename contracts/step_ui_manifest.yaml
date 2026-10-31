@@ -15,7 +15,7 @@ forms:
 - operation_id: embed
   title: Embed texts
   fields:
-  - {name: texts, widget_type: json, label: 'Texts * — array of 1–96 strings', required: true}
+  - {name: texts, widget_type: json, label: 'Texts * — array; batch limit depends on dimensions (see About)', required: true}
   - name: input_type
     widget_type: select
     label: 'Input type *'
