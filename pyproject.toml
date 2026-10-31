@@ -1,0 +1,6 @@
+[tool.mypy]
+python_version = "3.12"
+
+[[tool.mypy.overrides]]
+module = ["flowsteward_extension_sdk", "flowsteward_extension_sdk.*"]
+ignore_missing_imports = true
