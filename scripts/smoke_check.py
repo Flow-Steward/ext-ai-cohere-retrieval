@@ -36,7 +36,7 @@ with patch(
         request("rerank", {"query": "q", "documents": [{"id": "a", "text": "text"}]})
     )["ok"]
 with patch(
-    "runtime.call", return_value={"id": "test", "embeddings": {"float": [[0.5]]}}
+    "runtime.call", return_value={"id": "test", "embeddings": {"float": [[0.5] * 1536]}}
 ):
     assert main.handle(
         request("embed", {"texts": ["text"], "input_type": "search_document"})

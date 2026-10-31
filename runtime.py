@@ -68,11 +68,25 @@ def call(endpoint, data, key):
         raise Failure(
             "timeout", "Cohere request timed out; check its outcome before retrying."
         ) from None
-    except (URLError, ValueError, OSError):
+    except URLError as exc:
+        if isinstance(exc.reason, (TimeoutError, socket.timeout)):
+            raise Failure(
+                "timeout",
+                "Cohere request timed out; check its outcome before retrying.",
+            ) from None
+        raise Failure("provider_unavailable", "Cohere request failed.") from None
+    except (ValueError, OSError):
         raise Failure(
             "provider_unavailable",
             "Cohere request failed or returned an invalid response.",
         ) from None
+
+
+def request_id(response):
+    value = response.get("id")
+    if value is not None and (not isinstance(value, str) or len(value) > 256):
+        raise Failure("provider_unavailable", "Cohere returned an invalid request ID.")
+    return value
 
 
 def execute(operation, args, key):
@@ -100,6 +114,8 @@ def execute(operation, args, key):
                 or not doc["text"].strip()
             ):
                 invalid(f"documents[{i}]", "provide non-empty id and text strings.")
+            if len(doc["id"]) > 128:
+                invalid(f"documents[{i}].id", "use at most 128 characters.")
             ids.append(doc["id"])
             texts.append(doc["text"])
         if len(set(ids)) != len(ids):
@@ -133,6 +149,7 @@ def execute(operation, args, key):
                 or isinstance(score, bool)
                 or not isinstance(score, (float, int))
                 or not math.isfinite(score)
+                or not 0 <= score <= 1
             ):
                 raise Failure(
                     "provider_unavailable", "Cohere returned invalid rerank results."
@@ -140,7 +157,7 @@ def execute(operation, args, key):
             seen.add(index)
             result.append({"id": ids[index], "index": index, "score": score})
         result.sort(key=lambda row: row["score"], reverse=True)
-        return {"model": model, "results": result, "request_id": response.get("id")}
+        return {"model": model, "results": result, "request_id": request_id(response)}
     if operation == "embed":
         model = args.get("model", "embed-v4.0")
         if model not in EMBED_MODELS:
@@ -175,6 +192,14 @@ def execute(operation, args, key):
                     "choose a supported dimension for the selected model.",
                 )
             data["output_dimension"] = dim
+        expected_dim = (
+            dim if dim is not None else (1536 if model == "embed-v4.0" else 2048)
+        )
+        if len(texts) * expected_dim * 32 > 3 * 1024 * 1024:
+            invalid(
+                "texts",
+                "batch is too large for the selected dimensions; split it into smaller batches.",
+            )
         response = call("embed", data, key)
         vectors = (
             response.get("embeddings", {}).get("float")
@@ -193,7 +218,7 @@ def execute(operation, args, key):
                 "provider_unavailable", "Cohere returned incomplete embeddings."
             )
         dimensions = len(vectors[0])
-        if (dim is not None and dimensions != dim) or any(
+        if (dimensions != expected_dim) or any(
             not isinstance(v, list)
             or len(v) != dimensions
             or any(
@@ -208,10 +233,15 @@ def execute(operation, args, key):
                 "provider_unavailable",
                 "Cohere returned invalid embedding dimensions or values.",
             )
+        if len(json.dumps(vectors)) > 4 * 1024 * 1024:
+            raise Failure(
+                "provider_unavailable",
+                "Cohere returned embeddings too large for the workflow output.",
+            )
         return {
             "model": model,
             "vectors": vectors,
             "dimensions": dimensions,
-            "request_id": response.get("id"),
+            "request_id": request_id(response),
         }
     invalid("operation", "choose rerank or embed.")

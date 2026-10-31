@@ -29,12 +29,15 @@ class RuntimeTests(unittest.TestCase):
     def test_embed_counts_and_dimensions(self):
         with patch(
             "runtime.call",
-            return_value={"id": "r", "embeddings": {"float": [[1.0, 2.0], [3.0, 4.0]]}},
+            return_value={
+                "id": "r",
+                "embeddings": {"float": [[1.0] * 1536, [3.0] * 1536]},
+            },
         ):
             result = runtime.execute(
                 "embed", {"texts": ["a", "b"], "input_type": "search_document"}, "key"
             )
-        self.assertEqual(result["dimensions"], 2)
+        self.assertEqual(result["dimensions"], 1536)
         self.assertEqual(len(result["vectors"]), 2)
 
     def test_invalid_inputs(self):
@@ -135,7 +138,8 @@ class HostTests(unittest.TestCase):
             },
         }
         with patch(
-            "runtime.call", return_value={"id": "r", "embeddings": {"float": [[1.0]]}}
+            "runtime.call",
+            return_value={"id": "r", "embeddings": {"float": [[1.0] * 1536]}},
         ) as upstream:
             self.assertTrue(main.handle(payload)["ok"])
             self.assertEqual(upstream.call_args.args[2], "selected")
@@ -160,3 +164,98 @@ class DimensionTests(unittest.TestCase):
             )
         assert result["dimensions"] == 256
         assert upstream.call_args.args[1]["output_dimension"] == 256
+
+
+class ReviewRegressionTests(unittest.TestCase):
+    def test_default_dimensions_reject_wrong_width_for_each_model(self):
+        for model in ("embed-v4.0", "embed-v5.0-fast"):
+            with (
+                self.subTest(model=model),
+                patch(
+                    "runtime.call",
+                    return_value={"embeddings": {"float": [[0.0] * 256]}},
+                ),
+                self.assertRaises(runtime.Failure),
+            ):
+                runtime.execute(
+                    "embed",
+                    {"texts": ["x"], "input_type": "search_query", "model": model},
+                    "key",
+                )
+
+    def test_output_budget_rejected_before_call(self):
+        with patch("runtime.call") as call, self.assertRaises(runtime.Failure):
+            runtime.execute(
+                "embed",
+                {
+                    "texts": ["x"] * 96,
+                    "input_type": "search_query",
+                    "model": "embed-v5.0-fast",
+                },
+                "key",
+            )
+        call.assert_not_called()
+
+    def test_large_id_rejected_before_call(self):
+        with patch("runtime.call") as call, self.assertRaises(runtime.Failure):
+            runtime.execute(
+                "rerank",
+                {"query": "q", "documents": [{"id": "x" * 1025, "text": "x"}]},
+                "key",
+            )
+        call.assert_not_called()
+
+    def test_wrapped_timeout(self):
+        import sys
+        import types
+        from urllib.error import URLError
+
+        fake = types.SimpleNamespace(
+            open_pinned_url=lambda *a, **kw: (_ for _ in ()).throw(
+                URLError(TimeoutError())
+            )
+        )
+        with (
+            patch.dict(sys.modules, {"flowsteward_extension_sdk": fake}),
+            self.assertRaises(runtime.Failure) as exc,
+        ):
+            runtime.call("embed", {}, "key")
+        self.assertEqual(exc.exception.code, "timeout")
+
+
+class OutputBoundaryTests(unittest.TestCase):
+    def test_maximum_budget_in_host_envelope(self):
+        import json
+        import main
+
+        payload = {
+            "contract_version": "extension_host_v2",
+            "mode": "action",
+            "runtime_context": {
+                "group_id": None,
+                "for_each_id": None,
+                "step_id": "embed",
+                "step_execution_id": "123",
+            },
+            "action": {
+                "action_id": "embed",
+                "input": {
+                    "texts": ["x"] * 48,
+                    "input_type": "search_query",
+                    "model": "embed-v5.0-pro",
+                },
+                "target": {"connection": {"secrets": {"api_key": "selected"}}},
+            },
+        }
+        with patch(
+            "runtime.call",
+            return_value={
+                "id": "r",
+                "embeddings": {
+                    "float": [[0.12345678901234568] * 2048 for _ in range(48)]
+                },
+            },
+        ):
+            result = main.handle(payload)
+        self.assertTrue(result["ok"])
+        self.assertLess(len(json.dumps(result).encode()), 5 * 1024 * 1024)
