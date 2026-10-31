@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import jsonschema
+import jsonschema  # type: ignore[import-untyped]
 import pytest
 import yaml
 
