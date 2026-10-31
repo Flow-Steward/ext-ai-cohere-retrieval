@@ -396,3 +396,37 @@ class EffectTests(unittest.TestCase):
                 "key",
             )
         call.assert_not_called()
+
+
+class CorrelationTests(unittest.TestCase):
+    def test_http_request_id_and_no_automatic_retry(self):
+        import sys
+        import types
+        from urllib.error import HTTPError
+
+        error = HTTPError(
+            "https://api.cohere.com",
+            429,
+            "limited",
+            {"x-request-id": "cohere-request-1"},
+            None,
+        )
+        fake = types.SimpleNamespace(
+            open_pinned_url=lambda *a, **kw: (_ for _ in ()).throw(error)
+        )
+        with (
+            patch.dict(sys.modules, {"flowsteward_extension_sdk": fake}),
+            self.assertRaises(runtime.Failure) as exc,
+        ):
+            runtime.call("embed", {}, "key")
+        self.assertEqual(exc.exception.request_id, "cohere-request-1")
+        self.assertEqual(exc.exception.code, "rate_limited")
+
+    def test_ambiguous_failure_is_not_safe_to_repeat(self):
+        import main
+
+        payload = EffectTests().payload()
+        with patch("runtime.call", side_effect=runtime.Failure("timeout", "uncertain")):
+            response = main.handle(payload)
+        self.assertFalse(response["retryable"])
+        self.assertFalse(response["definitely_no_external_effect"])
