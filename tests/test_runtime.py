@@ -113,3 +113,32 @@ class FailureTests(unittest.TestCase):
                 runtime.call("embed", {}, "secret-value")
             self.assertEqual(exc.exception.code, expected)
             self.assertNotIn("secret-value", str(exc.exception))
+
+
+class HostTests(unittest.TestCase):
+    def test_selected_connection_key_and_invalid_scope(self):
+        import main
+
+        payload = {
+            "contract_version": "extension_host_v2",
+            "mode": "action",
+            "runtime_context": {
+                "group_id": None,
+                "for_each_id": None,
+                "step_id": "embed",
+                "step_execution_id": "123",
+            },
+            "action": {
+                "action_id": "embed",
+                "input": {"texts": ["a"], "input_type": "search_query"},
+                "target": {"connection": {"secrets": {"api_key": "selected"}}},
+            },
+        }
+        with patch(
+            "runtime.call", return_value={"id": "r", "embeddings": {"float": [[1.0]]}}
+        ) as upstream:
+            self.assertTrue(main.handle(payload)["ok"])
+            self.assertEqual(upstream.call_args.args[2], "selected")
+            payload["runtime_context"] = {}
+            self.assertFalse(main.handle(payload)["ok"])
+            self.assertEqual(upstream.call_count, 1)
