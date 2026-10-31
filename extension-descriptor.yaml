@@ -10,7 +10,13 @@ identity:
 vendor: {vendor_name: Flow Steward, support_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval/issues'}
 listing: {visibility: public_reference, category: ai}
 distribution: {channel: private_byo, execution_modes: [local], allows_self_hosted: true, requires_connected_control_plane: false, import_sources: [file]}
-runtime: {contract_version: extension_host_v2, compatibility: {platform_min: 1.0.0}}
+runtime:
+  contract_version: extension_host_v2
+  compatibility: {platform_min: 1.0.0}
+  extension_contract_v2:
+    connection_types: contracts/connection_types.yaml
+    operation_manifest: contracts/operation_manifest.yaml
+    step_ui_manifest: contracts/step_ui_manifest.yaml
 artifacts:
   extensions:
   - extension_id: flowsteward.cohere-retrieval
