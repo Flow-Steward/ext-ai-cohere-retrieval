@@ -2,6 +2,8 @@ component_id: cohere_about
 type: markdown
 title: Cohere Retrieval
 content: |
+  Requires Flow Steward 1.4.0 or later.
+
   Use **Rerank documents** to order up to 1,000 documents for a query. Supply an array of objects such as `[{"id":"a","text":"A document"}]`; IDs must be unique and at most 128 characters. Results include the original ID, zero-based index, score and Cohere request ID. `top_n` is optional and must be an integer no greater than the number of documents. The server also checks IDs are unique.
 
   Use **Embed texts** to return one float vector for each of 1–96 texts, in order, along with dimensions, exact model ID and request ID. Choose search documents for stored passages and search queries for queries; classification and clustering are also available. Optional explicit dimensions are 256, 512, 1024 or 1536 for either model. Leave blank to use the model default: 1536 for v4 or 2048 for v5. Match model and dimensions throughout your own index.

@@ -2,7 +2,7 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.cohere-retrieval
 kind: tool_provider
-version: 1.0.0
+version: 1.0.1
 release_stage: active
 display_name: Cohere Retrieval
 description: Rerank documents and generate text embeddings with Cohere.
@@ -23,6 +23,7 @@ action_manifest: ui/actions/actions.yaml
 python_requirements: []
 runtime:
   contract_version: extension_host_v2
+  compatibility: {platform_min: 1.4.0}
   extension_contract_v2:
     connection_types: contracts/connection_types.yaml
     operation_manifest: contracts/operation_manifest.yaml
