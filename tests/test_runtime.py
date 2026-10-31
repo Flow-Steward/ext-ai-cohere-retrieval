@@ -430,3 +430,71 @@ class CorrelationTests(unittest.TestCase):
             response = main.handle(payload)
         self.assertFalse(response["retryable"])
         self.assertFalse(response["definitely_no_external_effect"])
+
+
+class PostResponseCorrelationTests(unittest.TestCase):
+    def test_invalid_embedding_response_preserves_provider_id(self):
+        import main
+
+        with patch(
+            "runtime.call",
+            return_value={"id": "provider-received", "embeddings": {"float": [[0.0]]}},
+        ):
+            response = main.handle(EffectTests().payload())
+        self.assertFalse(response["ok"])
+        self.assertEqual(response["provider_message_id"], "provider-received")
+        self.assertFalse(response["definitely_no_external_effect"])
+
+    def test_invalid_rerank_response_preserves_provider_id(self):
+        import main
+
+        payload = EffectTests().payload()
+        payload["action"]["action_id"] = "rerank"
+        payload["action"]["input"] = {
+            "connection_ref": "conn-1",
+            "query": "q",
+            "documents": [{"id": "a", "text": "x"}],
+        }
+        with patch(
+            "runtime.call",
+            return_value={
+                "id": "provider-rerank",
+                "results": [{"index": 5, "relevance_score": 0.2}],
+            },
+        ):
+            response = main.handle(payload)
+        self.assertFalse(response["ok"])
+        self.assertEqual(response["provider_message_id"], "provider-rerank")
+        self.assertFalse(response["definitely_no_external_effect"])
+
+
+class ResponseHeaderTests(unittest.TestCase):
+    def test_malformed_body_retains_response_header_request_id(self):
+        import sys
+        import types
+
+        class Response:
+            headers = {"x-request-id": "header-id"}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, size):
+                return b"bad json"
+
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "flowsteward_extension_sdk": types.SimpleNamespace(
+                        open_pinned_url=lambda *a, **kw: Response()
+                    )
+                },
+            ),
+            self.assertRaises(runtime.Failure) as exc,
+        ):
+            runtime.call("embed", {}, "key")
+        self.assertEqual(exc.exception.request_id, "header-id")

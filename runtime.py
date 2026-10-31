@@ -43,16 +43,28 @@ def call(endpoint, data, key, *, timeout_seconds=60):
         },
         method="POST",
     )
+    correlation = ""
     try:
         with open_pinned_url(
             request, timeout_seconds=timeout_seconds, purpose="Cohere retrieval"
         ) as response:
+            headers = getattr(response, "headers", {}) or {}
+            correlation = str(headers.get("x-request-id", ""))
+            if len(correlation) > 256:
+                correlation = ""
             raw = response.read(16 * 1024 * 1024 + 1)
             if len(raw) > 16 * 1024 * 1024:
                 raise Failure(
-                    "provider_unavailable", "Cohere response exceeded the size limit."
+                    "provider_unavailable",
+                    "Cohere response exceeded the size limit.",
+                    correlation,
                 )
-            return json.loads(raw)
+            try:
+                return json.loads(raw)
+            except (ValueError, UnicodeError):
+                raise Failure(
+                    "provider_unavailable", "Cohere returned invalid JSON.", correlation
+                ) from None
     except HTTPError as exc:
         code = (
             "authentication_failed"
@@ -71,7 +83,9 @@ def call(endpoint, data, key, *, timeout_seconds=60):
         ) from None
     except (TimeoutError, socket.timeout):
         raise Failure(
-            "timeout", "Cohere request timed out; check its outcome before retrying."
+            "timeout",
+            "Cohere request timed out; check its outcome before retrying.",
+            correlation,
         ) from None
     except URLError as exc:
         if isinstance(exc.reason, (TimeoutError, socket.timeout)):
@@ -79,11 +93,14 @@ def call(endpoint, data, key, *, timeout_seconds=60):
                 "timeout",
                 "Cohere request timed out; check its outcome before retrying.",
             ) from None
-        raise Failure("provider_unavailable", "Cohere request failed.") from None
+        raise Failure(
+            "provider_unavailable", "Cohere request failed.", correlation
+        ) from None
     except (ValueError, OSError):
         raise Failure(
             "provider_unavailable",
             "Cohere request failed or returned an invalid response.",
+            correlation,
         ) from None
 
 
@@ -151,10 +168,13 @@ def execute(operation, args, key, config=None):
                 invalid("top_n", "enter an integer between 1 and the document count.")
             data["top_n"] = top
         response = call("rerank", data, key, timeout_seconds=timeout)
+        correlation = request_id(response) if isinstance(response, dict) else ""
         rows = response.get("results") if isinstance(response, dict) else None
         if not isinstance(rows, list) or len(rows) != (top or len(docs)):
             raise Failure(
-                "provider_unavailable", "Cohere returned an incomplete rerank response."
+                "provider_unavailable",
+                "Cohere returned an incomplete rerank response.",
+                correlation,
             )
         result, seen = [], set()
         for row in rows:
@@ -168,16 +188,18 @@ def execute(operation, args, key, config=None):
                 or index in seen
                 or isinstance(score, bool)
                 or not isinstance(score, (float, int))
-                or not math.isfinite(score)
                 or not 0 <= score <= 1
+                or not math.isfinite(score)
             ):
                 raise Failure(
-                    "provider_unavailable", "Cohere returned invalid rerank results."
+                    "provider_unavailable",
+                    "Cohere returned invalid rerank results.",
+                    correlation,
                 )
             seen.add(index)
             result.append({"id": ids[index], "index": index, "score": score})
         result.sort(key=lambda row: row["score"], reverse=True)
-        return {"model": model, "results": result, "request_id": request_id(response)}
+        return {"model": model, "results": result, "request_id": correlation}
     if operation == "embed":
         model = args.get("model", "embed-v4.0")
         if model not in EMBED_MODELS:
@@ -221,6 +243,7 @@ def execute(operation, args, key, config=None):
                 "batch is too large for the selected dimensions; split it into smaller batches.",
             )
         response = call("embed", data, key, timeout_seconds=timeout)
+        correlation = request_id(response) if isinstance(response, dict) else ""
         vectors = (
             response.get("embeddings", {}).get("float")
             if isinstance(response, dict)
@@ -235,7 +258,9 @@ def execute(operation, args, key, config=None):
             or not vectors[0]
         ):
             raise Failure(
-                "provider_unavailable", "Cohere returned incomplete embeddings."
+                "provider_unavailable",
+                "Cohere returned incomplete embeddings.",
+                correlation,
             )
         dimensions = len(vectors[0])
         if (dimensions != expected_dim) or any(
@@ -244,6 +269,7 @@ def execute(operation, args, key, config=None):
             or any(
                 isinstance(n, bool)
                 or not isinstance(n, (int, float))
+                or abs(n) > 1e308
                 or not math.isfinite(n)
                 for n in v
             )
@@ -252,16 +278,18 @@ def execute(operation, args, key, config=None):
             raise Failure(
                 "provider_unavailable",
                 "Cohere returned invalid embedding dimensions or values.",
+                correlation,
             )
         if len(json.dumps(vectors)) > 384 * 1024:
             raise Failure(
                 "provider_unavailable",
                 "Cohere returned embeddings too large for the workflow output.",
+                correlation,
             )
         return {
             "model": model,
             "vectors": vectors,
             "dimensions": dimensions,
-            "request_id": request_id(response),
+            "request_id": correlation,
         }
     invalid("operation", "choose rerank or embed.")
