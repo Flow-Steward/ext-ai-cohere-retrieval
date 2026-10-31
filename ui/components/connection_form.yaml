@@ -12,4 +12,4 @@ fields:
 - {path: display_name, label: Connection name, widget: text}
 - {path: environment, label: Environment, widget: text}
 - {path: request_timeout_seconds, label: Request timeout seconds, widget: integer, help: Choose an integer from 1 to 60 seconds.}
-- {path: api_key, label: 'Cohere API key *', widget: secret, required: true, help: Create a key in the Cohere dashboard. Flow Steward encrypts it in this project connection.}
+- {path: api_key, label: Cohere API key, widget: secret, required: true, help: Create a key in the Cohere dashboard. Flow Steward encrypts it in this project connection.}
