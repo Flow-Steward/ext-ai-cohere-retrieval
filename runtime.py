@@ -95,6 +95,7 @@ def call(endpoint, data, key, *, timeout_seconds=60):
             raise Failure(
                 "timeout",
                 "Cohere request timed out; check its outcome before retrying.",
+                correlation,
             ) from None
         raise Failure(
             "provider_unavailable", "Cohere request failed.", correlation

@@ -469,6 +469,34 @@ class PostResponseCorrelationTests(unittest.TestCase):
 
 
 class ResponseHeaderTests(unittest.TestCase):
+    def test_wrapped_read_timeout_retains_header_id_and_uncertain_outcome(self):
+        from urllib.error import URLError
+
+        import main
+
+        class Response:
+            headers = {"x-request-id": "header-timeout"}
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def read(self, size):
+                raise URLError(TimeoutError())
+
+        with patch(
+            "flowsteward_extension_sdk.open_pinned_url", return_value=Response()
+        ) as call:
+            result = main.handle(EffectTests().payload())
+
+        self.assertEqual(result["error_code"], "timeout")
+        self.assertEqual(result["provider_message_id"], "header-timeout")
+        self.assertFalse(result["retryable"])
+        self.assertFalse(result["definitely_no_external_effect"])
+        self.assertEqual(call.call_count, 1)
+
     def test_malformed_body_retains_response_header_request_id(self):
         import sys
         import types
