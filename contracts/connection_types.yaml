@@ -1,0 +1,13 @@
+connection_types:
+- connection_type_id: cohere_api
+  display_name: Cohere API
+  description: Project-scoped Cohere API key for retrieval operations.
+  config_schema: {type: object, additionalProperties: false, properties: {}}
+  secret_schema:
+    type: object
+    additionalProperties: false
+    required: [api_key]
+    properties:
+      api_key: {type: string, minLength: 1, title: Cohere API key, description: 'Create a production key in the Cohere dashboard and paste it here. Stored encrypted in this project connection.'}
+  capabilities: {test_connection: false, live_request: true, workflow_trigger: false, callback_ingress: false}
+  safety_profile: {requires_https: true, requires_host_allowlist: true, stores_secret_values: false}

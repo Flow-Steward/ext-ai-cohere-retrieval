@@ -1,0 +1,5 @@
+page_id: about
+title: About
+description: Cohere retrieval operations and usage.
+components:
+- ref: ../components/about.yaml

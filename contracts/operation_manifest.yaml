@@ -1,0 +1,38 @@
+operations:
+- operation_id: rerank
+  display_name: Rerank documents
+  description: Rank documents against a query. Returns original IDs, zero-based indices, and relevance scores.
+  operation_kind: action
+  workflow_visible: true
+  connection_type_ids: [cohere_api]
+  category: retrieval
+  inputs:
+  - {name: query, value_type: text, required: true, display_name: Query}
+  - {name: documents, value_type: array, required: true, display_name: Documents}
+  - {name: model, value_type: text, required: false, display_name: Model}
+  - {name: top_n, value_type: number, required: false, display_name: Maximum results}
+  outputs:
+  - {name: results, value_type: array}
+  - {name: model, value_type: text}
+  - {name: request_id, value_type: text}
+  result_fields: [result.results, result.model, result.request_id]
+  error_codes: [invalid_payload, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
+- operation_id: embed
+  display_name: Embed texts
+  description: Generate one floating-point vector per text in input order.
+  operation_kind: action
+  workflow_visible: true
+  connection_type_ids: [cohere_api]
+  category: retrieval
+  inputs:
+  - {name: texts, value_type: array, required: true, display_name: Texts}
+  - {name: input_type, value_type: text, required: true, display_name: Input type}
+  - {name: model, value_type: text, required: false, display_name: Model}
+  - {name: output_dimension, value_type: number, required: false, display_name: Output dimensions}
+  outputs:
+  - {name: vectors, value_type: array}
+  - {name: dimensions, value_type: number}
+  - {name: model, value_type: text}
+  - {name: request_id, value_type: text}
+  result_fields: [result.vectors, result.dimensions, result.model, result.request_id]
+  error_codes: [invalid_payload, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]

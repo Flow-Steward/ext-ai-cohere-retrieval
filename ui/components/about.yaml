@@ -1,0 +1,9 @@
+component_id: cohere_about
+type: markdown
+title: Cohere Retrieval
+content: |
+  Use **Rerank documents** to order up to 1,000 documents for a query. Supply an array of objects such as `[{"id":"a","text":"A document"}]`; IDs must be unique. Results include the original ID, zero-based index, score and Cohere request ID. `top_n` is optional.
+
+  Use **Embed texts** to return one float vector for each of 1–96 texts, in order, along with dimensions, exact model ID and request ID. Choose search documents for stored passages and search queries for queries; classification and clustering are also available. Optional dimensions: v4 supports 256, 512, 1024 or 1536; v5 supports 256, 512, 768, 1024, 1536 or 2048. Match model and dimensions throughout your own index.
+
+  Add an Extension tools step to a workflow, choose the operation and your Cohere connection, then map the required inputs. Calls send the supplied text to Cohere and may incur charges. This extension does not change Flow Steward knowledge-base indexes.

@@ -1,0 +1,26 @@
+manifest_version: 2
+lifecycle: {data_schema_version: 1, data_migrations: []}
+extension_id: flowsteward.cohere-retrieval
+kind: tool_provider
+version: 1.0.0
+release_stage: active
+display_name: Cohere Retrieval
+description: Rerank documents and generate text embeddings with Cohere.
+vendor: {name: Flow Steward, support_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval/issues'}
+listing: {category: ai, tags: [cohere, retrieval], summary: 'Rerank documents and embed texts using a project-scoped Cohere key.'}
+features: [tool, action]
+required_scopes: ['extension:invoke']
+egress: {hosts: [api.cohere.com]}
+machine_auth: {service_account_key: svc_ext_cohere_retrieval, required_scopes: ['extension:invoke']}
+account_scope: {scope_type: project, description: Cohere credentials are project connection scoped.}
+entrypoint: {mode: subprocess, command: [python3, main.py], timeout_seconds: 75}
+health: {command: [python3, health.py], timeout_seconds: 5}
+ui_manifest: ui/ui_manifest.yaml
+action_manifest: ui/actions/actions.yaml
+python_requirements: []
+runtime:
+  contract_version: extension_host_v2
+  extension_contract_v2:
+    connection_types: contracts/connection_types.yaml
+    operation_manifest: contracts/operation_manifest.yaml
+    step_ui_manifest: contracts/step_ui_manifest.yaml

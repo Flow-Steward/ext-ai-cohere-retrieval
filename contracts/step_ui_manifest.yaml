@@ -1,0 +1,35 @@
+forms:
+- operation_id: rerank
+  title: Rerank documents
+  fields:
+  - {name: query, widget_type: textarea, label: 'Query *', required: true}
+  - {name: documents, widget_type: json, label: 'Documents * — array of objects with unique id and text', required: true}
+  - name: model
+    widget_type: select
+    label: Rerank model
+    options:
+    - {label: Rerank v3.5 (default), value: rerank-v3.5}
+    - {label: Rerank v5 Pro, value: rerank-v5.0-pro}
+    - {label: Rerank v5 Fast, value: rerank-v5.0-fast}
+  - {name: top_n, widget_type: number, label: Maximum results (1 to document count)}
+- operation_id: embed
+  title: Embed texts
+  fields:
+  - {name: texts, widget_type: json, label: 'Texts * — array of 1–96 strings', required: true}
+  - name: input_type
+    widget_type: select
+    label: 'Input type *'
+    required: true
+    options:
+    - {label: Search documents, value: search_document}
+    - {label: Search queries, value: search_query}
+    - {label: Classification, value: classification}
+    - {label: Clustering, value: clustering}
+  - name: model
+    widget_type: select
+    label: Embed model
+    options:
+    - {label: Embed v4 (default), value: embed-v4.0}
+    - {label: Embed v5 Pro, value: embed-v5.0-pro}
+    - {label: Embed v5 Fast, value: embed-v5.0-fast}
+  - {name: output_dimension, widget_type: number, label: 'Output dimensions (optional; varies by model)'}
