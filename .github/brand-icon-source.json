@@ -1,0 +1,30 @@
+{
+  "brand_page_url": "https://cohere.com/newsroom",
+  "source_url": "https://cdn.sanity.io/files/rjtqmwfu/web3-prod/0671b7ad97014967e69e3f7be10acc9a8b0a577b.zip",
+  "source_file": "official-press-kit.zip",
+  "archive_member": "Cohere Logos/Symbol/Digital (RGB)/Color/cohere_symbol_colour_rgb.png",
+  "extracted_source_file": "cohere_symbol_colour_rgb.png",
+  "conversion": {
+    "tool": "ImageMagick",
+    "command": "magick cohere_symbol_colour_rgb.png -resize 320x320 -background none -gravity center -extent 400x400 -strip icon.png",
+    "details": "Official RGB color symbol from public Cohere newsroom press kit, uniformly downsampled from 1280x1280 to 320x320; centered on transparent 400x400 canvas with 40px clearspace on each side. No recoloring, redrawing, framing, stretch or AI generation."
+  },
+  "guidelines_observed": [
+    "Original official RGB symbol and colors preserved",
+    "Uniform aspect ratio maintained",
+    "Added transparent clearspace; no frame or effects"
+  ],
+  "trademark_notice_suggestion": "Cohere and the Cohere logo are trademarks of Cohere Inc. Used to identify the Cohere integration; no endorsement or affiliation is implied.",
+  "provider": "cohere",
+  "retrieved_at_utc": "2026-11-03T12:11:23.893591+00:00",
+  "source_sha256": "4a00f28d785f0ee56b595527bc74055ee5225aeddc678c638626719771666ead",
+  "output_file": "/private/tmp/fs-ai-logo-assets/cohere/icon.png",
+  "output_sha256": "e24654a404b05e3c1c670035f9aae6bca55a22a8a604fbc402df016eef784dcc",
+  "output_bytes": 14762,
+  "output_dimensions": [
+    400,
+    400
+  ],
+  "usage_note": "Public official asset retrieved without clicking or accepting a legal agreement. Public availability is provenance, not a grant of trademark rights.",
+  "extracted_source_sha256": "981633c865b117f2654f9e8ccad8a81a948759716b94b7f082ccb7061b318f07"
+}
