@@ -6,7 +6,7 @@ version: 1.0.2
 release_stage: active
 display_name: Cohere Retrieval
 description: Rerank documents and generate text embeddings with Cohere.
-vendor: {name: Flow Steward, support_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval/issues'}
+vendor: {name: Flow Steward, support_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval/issues', website_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval'}
 listing: {category: ai, tags: [cohere, retrieval], summary: 'Rerank documents and embed texts using a project-scoped Cohere key.'}
 features: [tool, action]
 required_scopes: ['extension:invoke']
