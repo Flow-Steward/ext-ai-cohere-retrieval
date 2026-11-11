@@ -2,12 +2,25 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.cohere-retrieval
 kind: tool_provider
-version: 1.0.3
+version: 1.0.4
 release_stage: active
 display_name: Cohere Retrieval
-description: Rerank documents and generate text embeddings with Cohere.
+description: |-
+  Improve search relevance and prepare text for similarity workflows with Cohere Retrieval. Its two actions rerank documents against a query or turn text into embedding vectors. Reranking accepts documents with your own IDs and returns their IDs, original positions and relevance scores, so later steps can select the most relevant material without losing its connection to the source.
+
+  The embedding action returns one floating-point vector per input text in the original order, together with the selected model, vector dimensions and provider request ID. Choose the input type for search documents, search queries, classification or clustering. The release exposes Cohere Rerank v3.5 and v5 model options, alongside Embed v4 and v5 options with configurable dimensions.
+
+  Use it to reorder candidate search results before an agent reads them, prepare text for a vector store, or feed similarity and classification steps. The extension supplies retrieval results rather than managing a knowledge-base index. Reranking accepts up to 1,000 documents; embedding accepts up to 96 texts per call. Text is sent to Cohere, where model access, quotas and billing apply.
 vendor: {name: Flow Steward, support_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval/issues', website_url: 'https://github.com/Flow-Steward/ext-ai-cohere-retrieval'}
-listing: {category: ai, tags: [cohere, retrieval], summary: 'Rerank documents and embed texts using a project-scoped Cohere key.'}
+listing:
+  category: ai
+  tags:
+  - cohere
+  - retrieval
+  summary: Rerank search results and create Cohere text embeddings for retrieval, classification and clustering
+    workflows.
+  setup_summary: Create a project-scoped Cohere API connection with an API key and select it in the Extension tools
+    step.
 features: [tool, action]
 required_scopes: ['extension:invoke']
 egress: {hosts: [api.cohere.com]}
