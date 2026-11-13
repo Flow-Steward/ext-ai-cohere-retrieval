@@ -4,6 +4,6 @@ title: Connect Cohere
 content: |
   1. Create a Cohere account and API key at https://dashboard.cohere.com/api-keys. Ensure your account has access to the models you select and sufficient quota.
   2. In this project, create a **Cohere API** connection. Paste the API key into the required secret field and save it. Flow Steward encrypts the secret for that project connection.
-  3. In a workflow Extension tools step, select the saved connection and either Rerank documents or Embed texts. Fill the fields marked * and run the workflow.
+  3. In a workflow Extension tools step, select the saved connection and either Rank documents by relevance to a query or Generate text embeddings. Fill the fields marked * and run the workflow.
 
   If authentication fails, replace the key in the selected project connection. If rate limited, check Cohere quota before retrying. A timeout has an uncertain provider outcome; inspect the run before retrying a billable call. Do not put keys or sensitive customer text in examples or logs.

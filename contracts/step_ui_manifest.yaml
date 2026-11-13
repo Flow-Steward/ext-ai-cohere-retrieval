@@ -1,43 +1,83 @@
 forms:
 - operation_id: rerank
-  title: Rerank documents
+  title: Rank documents by relevance to a query
   fields:
-  - {name: query, widget_type: textarea, label: 'Query *', required: true}
-  - {name: documents, widget_type: json, label: 'Documents * — array of objects with unique id and text', required: true}
+  - name: query
+    widget_type: textarea
+    label: Question or search query
+    required: true
+    help_text: Question used to compare the supplied documents. Provide the candidate texts separately in Documents.
+    placeholder: What is the refund deadline?
+  - name: documents
+    widget_type: json
+    label: Candidate documents (JSON array)
+    required: true
+    help_text: Supply 1–1000 objects, each with a unique nonempty id and nonempty text. Map results by ID or original
+      zero-based index; no document retrieval happens here.
+    placeholder: '[{"id":"policy_1","text":"Refunds are available within 30 days."}]'
   - name: model
     widget_type: select
-    label: Rerank model
+    label: Reranking model
     options:
-    - {label: Rerank v3.5 (default), value: rerank-v3.5}
-    - {label: Rerank v5 Pro, value: rerank-v5.0-pro}
-    - {label: Rerank v5 Fast, value: rerank-v5.0-fast}
-  - {name: top_n, widget_type: integer, label: Maximum results (1 to document count)}
+    - label: Rerank v3.5 (default)
+      value: rerank-v3.5
+    - label: Rerank v5 Pro
+      value: rerank-v5.0-pro
+    - label: Rerank v5 Fast
+      value: rerank-v5.0-fast
+    help_text: Optional; rerank-v3.5 is the default. The selected model must be accessible to your Cohere account.
+  - name: top_n
+    widget_type: integer
+    label: Maximum documents to return
+    help_text: Optional integer from 1 to the number of supplied documents. Leave blank to return all ranked documents.
+    placeholder: '1'
 - operation_id: embed
-  title: Embed texts
+  title: Generate text embeddings
   fields:
-  - {name: texts, widget_type: json, label: 'Texts * — array; batch limit depends on dimensions (see About)', required: true}
+  - name: texts
+    widget_type: json
+    label: Texts to embed (JSON array)
+    required: true
+    help_text: Nonempty text strings in input order. Maximum 96; the output-size limit may require smaller batches
+      at high dimensions. The returned vectors use this same order.
+    placeholder: '["Refunds are available within 30 days."]'
   - name: input_type
     widget_type: select
-    label: 'Input type *'
+    label: Embedding purpose
     required: true
     options:
-    - {label: Search documents, value: search_document}
-    - {label: Search queries, value: search_query}
-    - {label: Classification, value: classification}
-    - {label: Clustering, value: clustering}
+    - label: Search documents
+      value: search_document
+    - label: Search queries
+      value: search_query
+    - label: Classification
+      value: classification
+    - label: Clustering
+      value: clustering
+    help_text: Use search_document for stored fragments and search_query for questions. Classification and clustering
+      are separate purposes; use one consistent model for related vectors.
   - name: model
     widget_type: select
-    label: Embed model
+    label: Embedding model
     options:
-    - {label: Embed v4 (default), value: embed-v4.0}
-    - {label: Embed v5 Pro, value: embed-v5.0-pro}
-    - {label: Embed v5 Fast, value: embed-v5.0-fast}
+    - label: Embed v4 (default)
+      value: embed-v4.0
+    - label: Embed v5 Pro
+      value: embed-v5.0-pro
+    - label: Embed v5 Fast
+      value: embed-v5.0-fast
+    help_text: Optional; embed-v4.0 is the default. Use the same model for document and query embeddings.
   - name: output_dimension
     widget_type: select
-    label: Output dimensions
-    help_text: 'Optional. Choose 256, 512, 1024 or 1536, or leave blank for the model default (v4: 1536; v5: 2048).'
+    label: Embedding dimensions
+    help_text: 'Optional: 256, 512, 1024 or 1536. Blank uses the model default (v4: 1536; v5: 2048). Match the vector-store
+      dimensions exactly; large batches can exceed the result-size limit.'
     options:
-    - {label: '256', value: '256'}
-    - {label: '512', value: '512'}
-    - {label: '1024', value: '1024'}
-    - {label: '1536', value: '1536'}
+    - label: '256'
+      value: '256'
+    - label: '512'
+      value: '512'
+    - label: '1024'
+      value: '1024'
+    - label: '1536'
+      value: '1536'

@@ -2,7 +2,7 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.cohere-retrieval
 kind: tool_provider
-version: 1.0.4
+version: 1.0.5
 release_stage: active
 display_name: Cohere Retrieval
 description: |-

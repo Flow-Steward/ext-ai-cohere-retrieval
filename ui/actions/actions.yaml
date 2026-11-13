@@ -1,31 +1,82 @@
 actions:
 - action_id: rerank
   workflow_visible: true
-  title: Rerank documents
-  description: Rank documents against a query and return original IDs and indices.
-  required_scopes: ['extension:invoke']
-  handler: {mode: extension}
+  title: Rank documents by relevance to a query
+  description: Use a Cohere connection to reorder 1–1000 documents against a question or search query. Returns document
+    IDs, original zero-based indices and relevance scores; it does not fetch documents or change an index.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
   parameters:
-  - {name: connection_ref, type: string, required: true}
-  - {name: query, type: string, required: true}
-  - {name: documents, type: array, required: true}
-  - {name: model, type: string, required: false}
-  - {name: top_n, type: integer, required: false}
-  result_fields: [result.results, result.model, result.request_id]
-  error_codes: [invalid_payload, invalid_connection, effect_claim_required, test_mode_suppressed, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
+  - name: connection_ref
+    type: string
+    required: true
+  - name: query
+    type: string
+    required: true
+  - name: documents
+    type: array
+    required: true
+  - name: model
+    type: string
+    required: false
+  - name: top_n
+    type: integer
+    required: false
+  result_fields:
+  - result.results
+  - result.model
+  - result.request_id
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - effect_claim_required
+  - test_mode_suppressed
+  - not_configured
+  - authentication_failed
+  - rate_limited
+  - provider_unavailable
+  - timeout
   mutates_platform: false
 - action_id: embed
   workflow_visible: true
-  title: Embed texts
-  description: Generate one float vector per text.
-  required_scopes: ['extension:invoke']
-  handler: {mode: extension}
+  title: Generate text embeddings
+  description: Use a Cohere connection to generate one numeric vector per input text, preserving input order. Choose
+    document or query input type for retrieval and keep model and dimensions consistent with your vector store.
+  required_scopes:
+  - extension:invoke
+  handler:
+    mode: extension
   parameters:
-  - {name: connection_ref, type: string, required: true}
-  - {name: texts, type: array, required: true}
-  - {name: input_type, type: string, required: true}
-  - {name: model, type: string, required: false}
-  - {name: output_dimension, type: string, required: false}
-  result_fields: [result.vectors, result.dimensions, result.model, result.request_id]
-  error_codes: [invalid_payload, invalid_connection, effect_claim_required, test_mode_suppressed, not_configured, authentication_failed, rate_limited, provider_unavailable, timeout]
+  - name: connection_ref
+    type: string
+    required: true
+  - name: texts
+    type: array
+    required: true
+  - name: input_type
+    type: string
+    required: true
+  - name: model
+    type: string
+    required: false
+  - name: output_dimension
+    type: string
+    required: false
+  result_fields:
+  - result.vectors
+  - result.dimensions
+  - result.model
+  - result.request_id
+  error_codes:
+  - invalid_payload
+  - invalid_connection
+  - effect_claim_required
+  - test_mode_suppressed
+  - not_configured
+  - authentication_failed
+  - rate_limited
+  - provider_unavailable
+  - timeout
   mutates_platform: false
