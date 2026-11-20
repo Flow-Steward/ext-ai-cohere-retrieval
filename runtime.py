@@ -27,12 +27,40 @@ def invalid(field, hint):
     raise Failure("invalid_payload", f"{field}: {hint}")
 
 
+MAX_REQUEST_BYTES = 2 * 1024 * 1024
+MAX_INPUT_TEXT_CHARS = MAX_REQUEST_BYTES
+_JSON_SCAN_CHARS = 4096
+
+
+def _bounded_request_bytes(data):
+    # iterencode can emit a complete string as one chunk. Check text in smaller
+    # pieces first, including ASCII escapes, before asking it to encode a field.
+    remaining = MAX_REQUEST_BYTES
+    for field in ("query", "documents", "texts"):
+        value = data.get(field, [])
+        texts = [value] if isinstance(value, str) else value
+        for text in texts:
+            for offset in range(0, len(text), _JSON_SCAN_CHARS):
+                piece = text[offset : offset + _JSON_SCAN_CHARS]
+                remaining -= len(json.dumps(piece)) - 2
+                if remaining < 0:
+                    invalid(
+                        "input",
+                        "request exceeds the 2 MiB size limit; reduce the batch.",
+                    )
+
+    encoded = bytearray()
+    for piece in json.JSONEncoder().iterencode(data):
+        if len(encoded) + len(piece) > MAX_REQUEST_BYTES:
+            invalid("input", "request exceeds the 2 MiB size limit; reduce the batch.")
+        encoded.extend(piece.encode("ascii"))
+    return bytes(encoded)
+
+
 def call(endpoint, data, key, *, timeout_seconds=60):
     from flowsteward_extension_sdk import open_pinned_url
 
-    encoded = json.dumps(data).encode()
-    if len(encoded) > 2 * 1024 * 1024:
-        invalid("input", "request exceeds the 2 MiB size limit; reduce the batch.")
+    encoded = _bounded_request_bytes(data)
     request = Request(
         "https://api.cohere.com/v2/" + endpoint,
         data=encoded,
@@ -137,8 +165,12 @@ def execute(operation, args, key, config=None):
         if model not in RERANK_MODELS:
             invalid("model", "choose a supported rerank model.")
         query, docs = args.get("query"), args.get("documents")
-        if not isinstance(query, str) or not query.strip():
-            invalid("query", "enter a non-empty query.")
+        if (
+            not isinstance(query, str)
+            or len(query) > MAX_INPUT_TEXT_CHARS
+            or not query.strip()
+        ):
+            invalid("query", "enter a non-empty query within the request size limit.")
         if not isinstance(docs, list) or not 1 <= len(docs) <= 1000:
             invalid("documents", "provide 1–1000 documents.")
         ids, texts = [], []
@@ -148,9 +180,13 @@ def execute(operation, args, key, config=None):
                 or not isinstance(doc.get("id"), str)
                 or not doc["id"].strip()
                 or not isinstance(doc.get("text"), str)
+                or len(doc["text"]) > MAX_INPUT_TEXT_CHARS
                 or not doc["text"].strip()
             ):
-                invalid(f"documents[{i}]", "provide non-empty id and text strings.")
+                invalid(
+                    f"documents[{i}]",
+                    "provide non-empty id and text strings within the request size limit.",
+                )
             if len(doc["id"]) > 128:
                 invalid(f"documents[{i}].id", "use at most 128 characters.")
             ids.append(doc["id"])
@@ -212,9 +248,15 @@ def execute(operation, args, key, config=None):
         if (
             not isinstance(texts, list)
             or not 1 <= len(texts) <= 96
-            or any(not isinstance(t, str) or not t.strip() for t in texts)
+            or any(
+                not isinstance(t, str) or len(t) > MAX_INPUT_TEXT_CHARS or not t.strip()
+                for t in texts
+            )
         ):
-            invalid("texts", "provide 1–96 non-empty text strings.")
+            invalid(
+                "texts",
+                "provide 1–96 non-empty text strings within the request size limit.",
+            )
         input_type = args.get("input_type")
         if input_type not in INPUT_TYPES:
             invalid("input_type", "choose a supported text input type.")

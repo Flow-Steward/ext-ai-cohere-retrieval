@@ -554,3 +554,39 @@ class ResponseHeaderSuccessTests(unittest.TestCase):
             },
         ):
             self.assertEqual(runtime.call("rerank", {}, "key")["id"], "header-success")
+
+
+def test_request_budget_accounts_for_escaped_text_without_changing_encoding(
+    monkeypatch,
+):
+    import json
+
+    import pytest
+
+    data = {"texts": ["ordinary text", "leaf \U0001f343"], "model": "embed"}
+    expected = json.dumps(data).encode("ascii")
+    monkeypatch.setattr(runtime, "MAX_REQUEST_BYTES", len(expected))
+    assert runtime._bounded_request_bytes(data) == expected
+    monkeypatch.setattr(runtime, "MAX_REQUEST_BYTES", len(expected) - 1)
+    with pytest.raises(runtime.Failure, match="request exceeds the 2 MiB size limit"):
+        runtime._bounded_request_bytes(data)
+
+
+def test_entrypoint_reads_only_the_configured_envelope_budget(monkeypatch, capsys):
+    import io
+    import json
+    import sys
+
+    import main
+
+    class Input(io.BytesIO):
+        def read(self, size=-1):
+            assert size == 17
+            return super().read(size)
+
+    monkeypatch.setattr(main, "MAX_ENVELOPE_BYTES", 16)
+    monkeypatch.setattr(
+        sys, "stdin", io.TextIOWrapper(Input(b'{"sample":"ordinary text"}'))
+    )
+    assert main.main() == 2
+    assert json.loads(capsys.readouterr().out)["error_code"] == "invalid_payload"

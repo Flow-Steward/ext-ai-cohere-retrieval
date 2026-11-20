@@ -5,6 +5,9 @@ import sys
 from flowsteward_extension_sdk import runtime_context_from_payload
 import runtime
 
+# Leave room for the host envelope and document IDs alongside the provider body.
+MAX_ENVELOPE_BYTES = 8 * 1024 * 1024
+
 
 def handle(payload):
     try:
@@ -96,7 +99,10 @@ def handle(payload):
 
 def main():
     try:
-        payload = json.load(sys.stdin)
+        raw = sys.stdin.buffer.read(MAX_ENVELOPE_BYTES + 1)
+        if len(raw) > MAX_ENVELOPE_BYTES:
+            raise ValueError("host envelope exceeds its byte limit")
+        payload = json.loads(raw.decode("utf-8"))
         response = handle(payload)
     except (ValueError, TypeError):
         response = {

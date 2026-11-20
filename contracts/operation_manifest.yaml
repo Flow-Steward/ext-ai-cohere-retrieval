@@ -20,6 +20,7 @@ operations:
     schema:
       type: string
       minLength: 1
+      maxLength: 2097152
       pattern: \S
   - name: documents
     value_type: array
@@ -43,6 +44,7 @@ operations:
           text:
             type: string
             minLength: 1
+            maxLength: 2097152
             pattern: \S
   - name: model
     value_type: text
@@ -108,6 +110,7 @@ operations:
       items:
         type: string
         minLength: 1
+        maxLength: 2097152
         pattern: \S
   - name: input_type
     value_type: text
