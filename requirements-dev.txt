@@ -1,4 +1,4 @@
 ./dev-wheels/flowsteward_extension_sdk-0.4.0-py3-none-any.whl
 pytest
-PyYAML==6.0.3
+PyYAML==6.0.4
 jsonschema==4.26.0
